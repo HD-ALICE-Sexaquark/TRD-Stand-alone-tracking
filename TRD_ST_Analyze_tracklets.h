@@ -2,51 +2,51 @@
 #define USEEVE
 
 using namespace std;
-#include <cmath>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <vector>
 #include "TString.h"
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
 #include "TObject.h"
 
+#include "Math/Functor.h"
+#include "TFitResult.h"
 #include "TFitter.h"
 #include "TVirtualFitter.h"
-#include "TFitResult.h"
-#include "Math/Functor.h"
 
-#include<TMath.h>
+#include <TMath.h>
 
-//for generator
+// for generator
+#include "TCanvas.h"
+#include "TFile.h"
 #include "TGraph.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TNtuple.h"
-#include "TCanvas.h"
-#include "TFile.h"
 
-#include "TLorentzVector.h"
-#include "TVector3.h"
-#include "TChain.h"
-#include "TTree.h"
-#include "TMath.h"
-#include <Math/BinaryOperators.h>
-#include "Math/MConfig.h"
-#include <iosfwd>
 #include "Math/Expression.h"
+#include "Math/MConfig.h"
+#include "Math/MatrixFunctions.h"
 #include "Math/MatrixRepresentationsStatic.h"
 #include "Math/SMatrix.h"
-#include "Math/MatrixFunctions.h"
+#include "TChain.h"
+#include "TLorentzVector.h"
+#include "TMath.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
+#include "TTree.h"
+#include "TVector3.h"
+#include <Math/BinaryOperators.h>
+#include <iosfwd>
 
 #if defined(USEEVE)
-#include "TEveBox.h"
 #include "TEveArrow.h"
-#include <TEveManager.h>
+#include "TEveBox.h"
 #include "TEveLine.h"
 #include "TEvePointSet.h"
+#include <TEveManager.h>
 #endif
 
 #include "Ali_TRD_ST.h"
@@ -54,83 +54,70 @@ using namespace std;
 #include "Ali_TRD_Self_Event.h"
 #include "Ali_TRD_Self_EventLinkDef.h"
 
+ClassImp(Ali_MC_particle) ClassImp(Ali_TRD_ST_Tracklets) ClassImp(Ali_TRD_ST_Digits) ClassImp(Ali_TRD_ST_TPC_Track)
+    ClassImp(Ali_TRD_ST_Event)
 
-ClassImp(Ali_MC_particle)
-ClassImp(Ali_TRD_ST_Tracklets)
-ClassImp(Ali_TRD_ST_Digits)
-ClassImp(Ali_TRD_ST_TPC_Track)
-ClassImp(Ali_TRD_ST_Event)
+        ClassImp(Ali_Kalman_Track) ClassImp(Ali_TPC_Track) ClassImp(Ali_TRD_Photon) ClassImp(Ali_TRD_Nuclear_interaction)
+            ClassImp(Ali_TRD_Self_Event)
 
+#define KNRM "\x1B[0m"
+#define KRED "\x1B[31m"
+#define KGRN "\x1B[32m"
+#define KYEL "\x1B[33m"
+#define KBLU "\x1B[34m"
+#define KMAG "\x1B[35m"
+#define KCYN "\x1B[36m"
+#define KWHT "\x1B[37m"
 
-ClassImp(Ali_Kalman_Track)
-ClassImp(Ali_TPC_Track)
-ClassImp(Ali_TRD_Photon)
-ClassImp(Ali_TRD_Nuclear_interaction)
-ClassImp(Ali_TRD_Self_Event)
-
-
-
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
-
-    static vector< vector<Double_t> > vec_Dt_digit_pos_cluster;
+                static vector<vector<Double_t>> vec_Dt_digit_pos_cluster;
 
 //----------------------------------------------------------------------------------------
-class Ali_TRD_ST_Analyze
-{
-private:
+class Ali_TRD_ST_Analyze {
+   private:
     TChain* input_SE;
 
     TString in_list_name;
 
-    TString TRD_ST_TREE   = "Tree_TRD_ST_Event";
+    TString TRD_ST_TREE = "Tree_TRD_ST_Event";
     TString TRD_ST_BRANCH = "Tree_TRD_ST_Event_branch";
     Long64_t file_entries_total;
     Long64_t N_Events;
     Ali_TRD_ST_Tracklets* TRD_ST_Tracklet;
-    Ali_TRD_ST_Digits*    TRD_ST_Digit;
+    Ali_TRD_ST_Digits* TRD_ST_Digit;
     Ali_TRD_ST_TPC_Track* TRD_ST_TPC_Track;
-    Ali_TRD_ST_Event*     TRD_ST_Event;
-    Ali_MC_particle*      TRD_MC_Track;
-    Ali_MC_particle*      TRD_MC_Track_2;
-    Ali_MC_particle*      TRD_MC_Track_pi0;
-    Ali_MC_particle*      TRD_MC_Track_gammas[2];
-    Ali_MC_particle*      TRD_MC_Track_electrons[4];
+    Ali_TRD_ST_Event* TRD_ST_Event;
+    Ali_MC_particle* TRD_MC_Track;
+    Ali_MC_particle* TRD_MC_Track_2;
+    Ali_MC_particle* TRD_MC_Track_pi0;
+    Ali_MC_particle* TRD_MC_Track_gammas[2];
+    Ali_MC_particle* TRD_MC_Track_electrons[4];
     Ali_TRD_ST_TPC_Track* TRD_ST_TPC_Track_MC;
 
     Ali_TRD_ST_Tracklets* TRD_ST_Tracklet_out;
     Ali_TRD_ST_TPC_Track* TRD_ST_TPC_Track_out;
-    Ali_TRD_ST_Event*     TRD_ST_Event_out;
+    Ali_TRD_ST_Event* TRD_ST_Event_out;
     TTree* Tree_TRD_ST_Event_out;
 
-    //stuff for new classes
+    // stuff for new classes
     Ali_Kalman_Track* TRD_Kalman_track;
     Ali_TPC_Track* TPC_track;
-    Ali_TRD_Self_Event*   TRD_Self_Event;
+    Ali_TRD_Self_Event* TRD_Self_Event;
     Ali_TRD_Photon* TRD_Photon;
     Ali_TRD_Nuclear_interaction* TRD_Nuclear_interaction;
 
     Ali_Kalman_Track* TRD_Kalman_track_out;
     Ali_TPC_Track* TPC_track_out;
-    Ali_TRD_Self_Event*   TRD_Self_Event_out;
+    Ali_TRD_Self_Event* TRD_Self_Event_out;
     Ali_TRD_Photon* TRD_Photon_out;
     Ali_TRD_Nuclear_interaction* TRD_Nuclear_interaction_out;
 
-
     TTree* Tree_TRD_Self_Event_out;
 
-    //Tree for saving input and class member of TPC_track with adjacent TRD-tracklets (background)
+    // Tree for saving input and class member of TPC_track with adjacent TRD-tracklets (background)
     Ali_TRD_ST_TPC_Track_GNN* TRD_TPC_Track_GNN;
     Ali_TRD_ST_Tracklets_for_GNN* new_tracklet;
     TTree* Tree_Input_GNN_bckgr;
     TTree* Tree_Input_GNN_sign;
-
 
     TH2D* TH2D_AP_plot;
     const Int_t N_AP_radii = 20;
@@ -153,23 +140,19 @@ private:
     TH2D* h2D_nuclei_vertex_XY;
     TH1D* h1D_nuclei_vertex_R;
 
-
     Double_t EventVertexX = -999.0;
     Double_t EventVertexY = -999.0;
     Double_t EventVertexZ = -999.0;
     Long64_t Global_Event = -999;
-    Int_t    Global_RunID = -999;
+    Int_t Global_RunID = -999;
     TVector3 TV3_EventVertex;
 
     vector<TVector3> vec_TV3_secondary_vertices;
     TNtuple* NT_secondary_vertices;
     TNtuple* NT_secondary_vertex_cluster;
 
-
-
-    //static vector< vector< vector<Double_t> > > vec_Dt_digit_pos_cluster;    // layer, merged time bin. xyzADC for circle fits in Calibrate()
-    //vector< vector<Double_t> > vec_Dt_digit_pos_cluster;
-
+    // static vector< vector< vector<Double_t> > > vec_Dt_digit_pos_cluster;    // layer, merged time bin. xyzADC for circle fits in
+    // Calibrate() vector< vector<Double_t> > vec_Dt_digit_pos_cluster;
 
 #if defined(USEEVE)
     TEveLine* TEveLine_beam_axis = NULL;
@@ -184,9 +167,9 @@ private:
 
     vector<TEveLine*> vec_TPL3D_helix_MC;
 
-    vector< vector<TEveLine*> > vec_TEveLine_tracklets;
-    vector< vector<TEveLine*> > vec_TEveLine_tracklets_match;
-    vector< vector<TEveLine*> > vec_TEveLine_self_matched_tracklets;
+    vector<vector<TEveLine*>> vec_TEveLine_tracklets;
+    vector<vector<TEveLine*>> vec_TEveLine_tracklets_match;
+    vector<vector<TEveLine*>> vec_TEveLine_self_matched_tracklets;
     TEvePointSet* TEveP_TRD_det_origin;
     TEvePointSet* TEveP_offset_points;
     TEvePointSet* TEveP_nuclear_vertex_positions;
@@ -204,8 +187,8 @@ private:
     TEvePointSet* TEveP_beamA;
     TEvePointSet* TEveP_beamB;
 
-    vector< vector<TEveLine*> > TEveLine_vec_dir_vec_circle;
-    vector< vector<TEveLine*> > TEveLine_vec_dir_vec_circle_circle;
+    vector<vector<TEveLine*>> TEveLine_vec_dir_vec_circle;
+    vector<vector<TEveLine*>> TEveLine_vec_dir_vec_circle_circle;
     vector<TEveLine*> TEveLine_circle;
 
 #endif
@@ -213,28 +196,20 @@ private:
     Int_t N_tracklets_layers[6] = {0};
     Double_t N_NI_radius_cut = 0;
     Double_t scale_length_vec = -10.0;
-    Int_t track_color    = kAzure-2;
-    Int_t color_layer_match[6] = {kRed,kGreen,kCyan,kYellow,kPink-3,kOrange+8};
-    Int_t color_layer[6] = {kGray,kGray,kGray,kGray,kGray,kGray};
-    Double_t TRD_layer_radii[6][2] =
-    {
-        {297.5,306.5},
-        {310.0,320.0},
-        {323.0,333.0},
-        {336.0,345.5},
-        {348.0,357.0},
-        {361.0,371.0}
-    };
+    Int_t track_color = kAzure - 2;
+    Int_t color_layer_match[6] = {kRed, kGreen, kCyan, kYellow, kPink - 3, kOrange + 8};
+    Int_t color_layer[6] = {kGray, kGray, kGray, kGray, kGray, kGray};
+    Double_t TRD_layer_radii[6][2] = {{297.5, 306.5}, {310.0, 320.0}, {323.0, 333.0}, {336.0, 345.5}, {348.0, 357.0}, {361.0, 371.0}};
 
-    Int_t Not_installed_TRD_detectors[19] = {402,403,404,405,406,407,432,433,434,435,436,437,462,463,464,465,466,467,538};
+    Int_t Not_installed_TRD_detectors[19] = {402, 403, 404, 405, 406, 407, 432, 433, 434, 435, 436, 437, 462, 463, 464, 465, 466, 467, 538};
     TH1I* h_good_bad_TRD_chambers;
 
     // TRD 3D graphics
-    vector< vector<TH1D*> > vec_TH1D_TRD_geometry; // store for all 540 chambers the 8 corner vertices per detector
+    vector<vector<TH1D*>> vec_TH1D_TRD_geometry;  // store for all 540 chambers the 8 corner vertices per detector
 
-    vector<vector<Double_t>> mHelices_kalman; // Kalman helix parameters, based on AliHelix
-    vector<Double_t> mChi_2s_kalman; // Kalman helix parameters, based on AliHelix
-    vector<vector<Double_t>> mHelices_TPC; // Kalman helix parameters, based on AliHelix
+    vector<vector<Double_t>> mHelices_kalman;  // Kalman helix parameters, based on AliHelix
+    vector<Double_t> mChi_2s_kalman;           // Kalman helix parameters, based on AliHelix
+    vector<vector<Double_t>> mHelices_TPC;     // Kalman helix parameters, based on AliHelix
     vector<vector<Double_t>> PID_params_TPC;
     Double_t aliHelix_params[6];
     vector<Ali_Helix*> vec_helices;
@@ -242,7 +217,7 @@ private:
     vector<Ali_Helix*> vec_helices_TPC;
     Ali_Helix* TPC_single_helix;
     Ali_Helix* new_helix;
-    vector< vector<Ali_TRD_ST_Tracklets*> > vec_kalman_TRD_trackets;
+    vector<vector<Ali_TRD_ST_Tracklets*>> vec_kalman_TRD_trackets;
 
     TFile* layer_radii_file;
     TH1D* h_layer_radii_det;
@@ -250,7 +225,7 @@ private:
     TFile* file_TRD_geometry;
     TH2D* h2D_TRD_det_coordinates;
 
-    vector< vector<TH2D*> > vec_h2D_pT_vs_TPC_TRD_residuals;
+    vector<vector<TH2D*>> vec_h2D_pT_vs_TPC_TRD_residuals;
     TString input_dir;
     TString input_dir_lists;
     TProfile* tp_efficiency_matching_vs_pT;
@@ -261,15 +236,15 @@ private:
     vector<TH2D*> vec_TH2D_Delta_vs_impact;
     vector<TProfile*> vec_tp_Delta_vs_impact_circle;
     vector<TH2D*> vec_TH2D_Delta_vs_impact_circle;
-    vector< vector<TVector3*> >   vec_TV3_TRD_center;
-    vector <TVector3*> vec_TV3_TRD_offset;
+    vector<vector<TVector3*>> vec_TV3_TRD_center;
+    vector<TVector3*> vec_TV3_TRD_offset;
 
     TProfile* vec_tp_pvdca_vs_sector;
     TH2D* vec_TH2D_pvdca_vs_sector;
-    //Int_t inits_vec_tp_pvdca_vs_sector = 0;
+    // Int_t inits_vec_tp_pvdca_vs_sector = 0;
 
     vector<vector<Double_t>> ADC_rel;
-    vector<TGraph*> tg_bethe_bloch; // [e mu pi K p]
+    vector<TGraph*> tg_bethe_bloch;  // [e mu pi K p]
     TProfile* tp_gain;
     TProfile* tp_gain_uncor;
     TH2D* th2d_gain;
@@ -278,27 +253,26 @@ private:
     TH1D* h_dEdx_length_det;
     vector<TProfile2D*> vec_tp2d_gain_vs_xz;
 
-    vector <vector <Double_t>> vec_trd_TRD_pp_geom;
+    vector<vector<Double_t>> vec_trd_TRD_pp_geom;
     vector<Int_t> vec_flag_good_photon_track;
 
     Int_t i_MC_draw_track = 0;
 
-
-    TH1D* h1D_invariant_mass_S;     //histogram for plotting the invariant mass of the S particle     
-    TH1D* h1D_invariant_mass_L;     //histogram for plotting the invariant mass of the L particle 
-    TH1D* h1D_invariant_mass_K;     //histogram for plotting the invariant mass of the K particle
-    TH1D* h1D_invariant_mass_S_reconstructed;     //histogram for plotting the invariant mass of the S particle     
-    TH1D* h1D_invariant_mass_L_reconstructed;     //histogram for plotting the invariant mass of the L particle 
-    TH1D* h1D_invariant_mass_K_reconstructed;     //histogram for plotting the invariant mass of the K particle
+    TH1D* h1D_invariant_mass_S;                // histogram for plotting the invariant mass of the S particle
+    TH1D* h1D_invariant_mass_L;                // histogram for plotting the invariant mass of the L particle
+    TH1D* h1D_invariant_mass_K;                // histogram for plotting the invariant mass of the K particle
+    TH1D* h1D_invariant_mass_S_reconstructed;  // histogram for plotting the invariant mass of the S particle
+    TH1D* h1D_invariant_mass_L_reconstructed;  // histogram for plotting the invariant mass of the L particle
+    TH1D* h1D_invariant_mass_K_reconstructed;  // histogram for plotting the invariant mass of the K particle
     TH2D* h2d_invariant_mass_vs_R_Lambda;
     TH1D* h1d_R_Lambda_vertex;
-    std::map<Int_t, Int_t> index_particle_to_track_number; //map of particle index to track number for mc tracks
+    std::map<Int_t, Int_t> index_particle_to_track_number;  // map of particle index to track number for mc tracks
     std::map<Int_t, Int_t> map_matched_tpc_to_mc;
     std::map<Int_t, Int_t> map_matched_mc_to_tpc;
-    
-    //TFile* out_gain;
 
-public:
+    // TFile* out_gain;
+
+   public:
     Ali_TRD_ST_Analyze(TString out_dir, TString out_file_name, Int_t graphics);
     //~Ali_TRD_ST_Analyze();
 
@@ -313,11 +287,15 @@ public:
     void Draw_MC_event_2(Long64_t i_event, Int_t graphics);
 
     //---------------------------------------------------------------------------
-    //Some functions for analyzing nuclear interactions
+    // Some functions for analyzing nuclear interactions
     void AddVertextoHisto(Long64_t i_event);
-    void DrawTrackletsAroundVerticesOfNuclearInt(Long64_t i_event, Int_t graphics, Int_t draw_tracklets, Int_t draw_vertex, Int_t draw_MC_tracks, Int_t apply_Helix_cut);
-    void DrawTrackletsAroundTPCTracksofCandidates(Long64_t i_event, Int_t apply_helix_cut, std::vector<Int_t> Found_TPC_Tracks, Int_t graphics, Int_t draw_tracklets, Int_t write_out_bckg, Int_t write_out_sign, Int_t Color);
-    pair<std::vector<pair<std::vector<Float_t>, Int_t>>, std::vector<pair<std::vector<Float_t>, Int_t>>> NIInteractionCandidateswithHelix(Long64_t i_event);
+    void DrawTrackletsAroundVerticesOfNuclearInt(Long64_t i_event, Int_t graphics, Int_t draw_tracklets, Int_t draw_vertex,
+                                                 Int_t draw_MC_tracks, Int_t apply_Helix_cut);
+    void DrawTrackletsAroundTPCTracksofCandidates(Long64_t i_event, Int_t apply_helix_cut, std::vector<Int_t> Found_TPC_Tracks,
+                                                  Int_t graphics, Int_t draw_tracklets, Int_t write_out_bckg, Int_t write_out_sign,
+                                                  Int_t Color);
+    pair<std::vector<pair<std::vector<Float_t>, Int_t>>, std::vector<pair<std::vector<Float_t>, Int_t>>> NIInteractionCandidateswithHelix(
+        Long64_t i_event);
     std::map<Int_t, Int_t> ReturnDictionary(Long64_t i_event, Int_t MC_index_to_track_number, Int_t MC_index_to_PDG_code);
     vector<Int_t> CompareMCHelizestoTPCHelizes(Long64_t i_event, std::vector<pair<std::vector<Float_t>, Int_t>> helix_params_with_index);
     void DrawHistogram();
@@ -331,42 +309,44 @@ public:
     void set_self_event_info();
 
     Ali_TRD_ST_Tracklets** Tracklets;
-    vector< vector<Ali_TRD_ST_Tracklets*> > matched_tracks;
+    vector<vector<Ali_TRD_ST_Tracklets*>> matched_tracks;
     vector<Int_t> vec_idx_matched_TPC_track;
     Int_t Number_Tracklets;
-    void Draw_Kalman_Tracklets(vector< vector<Ali_TRD_ST_Tracklets*> > found_tracks);
+    void Draw_Kalman_Tracklets(vector<vector<Ali_TRD_ST_Tracklets*>> found_tracks);
     void Draw_matched_Kalman_Tracklets(Int_t i_track_plot);
     void set_Kalman_helix_params(vector<vector<Double_t>> mHelices_kalman_in);
     void set_Kalman_chi_2(vector<Double_t> mChi_2s_in);
     Int_t set_TPC_helix_params(Long64_t i_event);
-    void set_Kalman_TRD_tracklets(vector< vector<Ali_TRD_ST_Tracklets*> > vec_kalman_TRD_trackets_in);
+    void set_Kalman_TRD_tracklets(vector<vector<Ali_TRD_ST_Tracklets*>> vec_kalman_TRD_trackets_in);
     void Calc_Kalman_efficiency();
     void flag_TRD_tracks_with_shared_tracklets();
     void Match_kalman_tracks_to_TPC_tracks(Int_t graphics, Int_t draw_matched_TPC_track, Int_t draw_matched_TRD_track, Int_t color);
     void Draw_Kalman_Helix_Tracks(Int_t n_track, Int_t color, Double_t low_R, Double_t high_R);
     void set_single_helix_params(vector<Double_t> vec_params);
-    void Evaluate(Double_t t, // helix evaluation, taken from AliHelix
-                  Double_t r[3]);  //radius vector
-    void fHelixAtoPointdca(TVector3 space_vec, Ali_Helix* helixA, Float_t &pathA, Float_t &dcaAB);
-    void fHelixABdca(Ali_Helix* helixA, Ali_Helix* helixB, Float_t &pathA, Float_t &pathB, Float_t &dcaAB,Float_t pathA_in, Float_t pathB_in);
-    Int_t fCross_points_Circles(Double_t x1, Double_t y1, Double_t r1, Double_t x2, Double_t y2, Double_t r2,Double_t &x1_c, Double_t &y1_c, Double_t &x2_c, Double_t &y2_c);
-    TVector3 fDCA_Helix_Estimate(Ali_Helix* helixA, Ali_Helix* helixB, Float_t &pathA, Float_t &pathB, Float_t &dcaAB);
+    void Evaluate(Double_t t,      // helix evaluation, taken from AliHelix
+                  Double_t r[3]);  // radius vector
+    void fHelixAtoPointdca(TVector3 space_vec, Ali_Helix* helixA, Float_t& pathA, Float_t& dcaAB);
+    void fHelixABdca(Ali_Helix* helixA, Ali_Helix* helixB, Float_t& pathA, Float_t& pathB, Float_t& dcaAB, Float_t pathA_in,
+                     Float_t pathB_in);
+    Int_t fCross_points_Circles(Double_t x1, Double_t y1, Double_t r1, Double_t x2, Double_t y2, Double_t r2, Double_t& x1_c,
+                                Double_t& y1_c, Double_t& x2_c, Double_t& y2_c);
+    TVector3 fDCA_Helix_Estimate(Ali_Helix* helixA, Ali_Helix* helixB, Float_t& pathA, Float_t& pathB, Float_t& dcaAB);
     Int_t Calculate_secondary_vertices(Int_t graphics, Int_t flag_TRD_TPC_tracks, Int_t flag_fill_tree);
-    pair<Double_t,Double_t>fpathLength(Double_t r,Ali_Helix* helixA) const;
-    Int_t fCircle_Interception(Double_t x1, Double_t y1, Double_t r1, Double_t x2, Double_t y2, Double_t r2,Double_t &x1_c, Double_t &y1_c, Double_t &x2_c, Double_t &y2_c);
+    pair<Double_t, Double_t> fpathLength(Double_t r, Ali_Helix* helixA) const;
+    Int_t fCircle_Interception(Double_t x1, Double_t y1, Double_t r1, Double_t x2, Double_t y2, Double_t r2, Double_t& x1_c, Double_t& y1_c,
+                               Double_t& x2_c, Double_t& y2_c);
     void Plot_AP();
     void Plot_pT_TPC_vs_Kalman();
     void Draw_TPC_track(Int_t i_track, Int_t color, Double_t line_width, Double_t max_path);
     void Draw_MC_track(Int_t i_track, Int_t color, Double_t line_width, Double_t max_path);
     void Draw_MC_track_w_vertices(Int_t i_track_print_nbr, Int_t color, Double_t line_width, Double_t max_path, Int_t i_track);
-    Bool_t MCComesFromSexaquark(Ali_MC_particle * mcPart);
+    Bool_t MCComesFromSexaquark(Ali_MC_particle* mcPart);
     void Match_TPC_to_MC_Data();
 
-
-    TH1D* get_layer_radii_hist() {return h_layer_radii_det;}
-    Long64_t get_N_Events() {return N_Events;}
-    void set_input_lists(TString input_dir_lists_in) {input_dir_lists = input_dir_lists_in;}
-    void set_input_dir(TString input_dir_in) {input_dir = input_dir_in;}
+    TH1D* get_layer_radii_hist() { return h_layer_radii_det; }
+    Long64_t get_N_Events() { return N_Events; }
+    void set_input_lists(TString input_dir_lists_in) { input_dir_lists = input_dir_lists_in; }
+    void set_input_dir(TString input_dir_in) { input_dir = input_dir_in; }
     Float_t Calc_nuclev_bitmap(vector<Int_t> vec_idx_kalman_tracks_nuclev_in);
     void Write();
     void Calibrate(Int_t graphics);
@@ -374,13 +354,15 @@ public:
     void hists_pv_dca();
     void Draw_n_Save_hists_pv_dca(TString out_dir, TString out_file_name_calib);
     Float_t primary_vertex_dca(Int_t i_track);
-    //static Double_t distance_circ_point_2D(Double_t x,Double_t y,Double_t *p);
-    //static void sum_distance_circ_point_2D(Int_t &, Double_t *, Double_t & sum, Double_t * par, Int_t );
+    // static Double_t distance_circ_point_2D(Double_t x,Double_t y,Double_t *p);
+    // static void sum_distance_circ_point_2D(Int_t &, Double_t *, Double_t & sum, Double_t * par, Int_t );
     TProfile* Calibrate_gain(Long64_t i_event, Int_t Bethe_flag);
     void Draw_Save_Gain_calib();
 
-    TVector3 fDCA_Helix_Estimate_xy_z(Ali_Helix* helixA, Ali_Helix* helixB, Float_t &pathA, Float_t &pathB, Float_t &dcaAB_xy, Float_t &dcaAB_z);
-    std::pair<Float_t, Float_t> fHelixAtoPointdca_xy_z(TVector3 space_vec, Ali_Helix* helixA, Float_t &pathA, Float_t &dcaAB_xy, Float_t &dcaAB_z);
+    TVector3 fDCA_Helix_Estimate_xy_z(Ali_Helix* helixA, Ali_Helix* helixB, Float_t& pathA, Float_t& pathB, Float_t& dcaAB_xy,
+                                      Float_t& dcaAB_z);
+    std::pair<Float_t, Float_t> fHelixAtoPointdca_xy_z(TVector3 space_vec, Ali_Helix* helixA, Float_t& pathA, Float_t& dcaAB_xy,
+                                                       Float_t& dcaAB_z);
     ClassDef(Ali_TRD_ST_Analyze, 1)
 };
 //----------------------------------------------------------------------------------------
